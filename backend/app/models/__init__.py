@@ -1,4 +1,4 @@
-"""Models module."""
+"""Models package."""
 from app.models.github_project import GitHubProject, ProjectState
 from app.models.prompt import Prompt, PromptStatus
 
