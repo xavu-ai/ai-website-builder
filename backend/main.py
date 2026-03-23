@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routes import prompts
+from api.v1.router import router
 from core.exceptions import PromptValidationError, QueueFullError
 
 
@@ -55,7 +55,7 @@ async def queue_full_handler(request: Request, exc: QueueFullError) -> JSONRespo
 
 
 # Include API routes
-app.include_router(prompts.router)
+app.include_router(router)
 
 
 @app.get("/health")
