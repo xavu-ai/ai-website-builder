@@ -1,4 +1,4 @@
-"""Schemas package."""
+"""Schemas module."""
 from app.schemas.github_project import (
     ProjectCreateRequest,
     ProjectListResponse,

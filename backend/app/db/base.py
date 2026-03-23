@@ -1,9 +1,9 @@
-"""Database base with all models."""
+"""SQLAlchemy base configuration."""
 from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
-    """Base class for all database models."""
+    """Base class for all models."""
 
     pass
 

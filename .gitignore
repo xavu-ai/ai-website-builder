@@ -17,6 +17,24 @@ eggs/
 .eggs/
 pip-log.txt
 pip-delete-this-directory.txt
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
 .venv/
@@ -24,6 +42,16 @@ venv/
 ENV/
 env/
 .python-version
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# uv
+.uv/
 
 # Python tools
 .mypy_cache/
@@ -55,6 +83,7 @@ yarn-error.log*
 # ---- Docker ----
 # Don't ignore Dockerfiles or docker-compose, but ignore runtime
 docker-compose.override.yml
+.docker/
 
 # ---- IDE / Editor ----
 .idea/
@@ -66,12 +95,22 @@ docker-compose.override.yml
 Thumbs.db
 desktop.ini
 
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
 # ---- Environment / Secrets ----
 .env
 .env.local
 .env.*.local
 !.env.example
 !.env.template
+.env.local
+.env.development
+.env.test
+.env.production
 
 # ---- OS ----
 .DS_Store
@@ -88,3 +127,10 @@ tmp/
 temp/
 .cache/
 coverage/
+
+# Database
+*.db
+*.sqlite
+
+# Alembic
+alembic.ini
