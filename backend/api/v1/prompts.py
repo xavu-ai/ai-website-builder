@@ -1,8 +1,8 @@
 from datetime import datetime
+
 from fastapi import APIRouter, HTTPException, status
 from models.prompt import PromptSubmissionRequest, PromptSubmissionResponse
 from services.queue import get_queue_service
-
 
 router = APIRouter(prefix="/prompts", tags=["prompts"])
 queue_service = get_queue_service()

@@ -1,8 +1,8 @@
 import json
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from core.config import settings
 
@@ -16,7 +16,7 @@ class QueueService(ABC):
         pass
 
     @abstractmethod
-    async def get_status(self, confirmation_id: str) -> Optional[dict[str, Any]]:
+    async def get_status(self, confirmation_id: str) -> dict[str, Any] | None:
         """Get the status of a submission."""
         pass
 
@@ -39,12 +39,12 @@ class MemoryQueueService(QueueService):
         self._submissions[confirmation_id] = {
             "confirmation_id": confirmation_id,
             "prompt": prompt,
-            "submitted_at": datetime.utcnow().isoformat(),
+            "submitted_at": datetime.now(UTC).isoformat(),
             "status": "queued",
         }
         return confirmation_id
 
-    async def get_status(self, confirmation_id: str) -> Optional[dict[str, Any]]:
+    async def get_status(self, confirmation_id: str) -> dict[str, Any] | None:
         """Get the status of a submission by confirmation ID."""
         return self._submissions.get(confirmation_id)
 
@@ -54,13 +54,13 @@ class RedisQueueService(QueueService):
 
     def __init__(self) -> None:
         import redis.asyncio as redis_lib
-        self._redis: Optional[redis_lib.Redis] = None
+        self._redis: redis_lib.Redis | None = None
         self._redis_lib = redis_lib
 
     async def _get_redis(self) -> Any:
         if self._redis is None:
             self._redis = self._redis_lib.from_url(
-                settings.REDIS_URL, decode_responses=True
+                settings.REDIS_URL, decode_responses=True  # type: ignore[arg-type]
             )
         return self._redis
 
@@ -76,7 +76,7 @@ class RedisQueueService(QueueService):
         data = {
             "confirmation_id": confirmation_id,
             "prompt": prompt,
-            "submitted_at": datetime.utcnow().isoformat(),
+            "submitted_at": datetime.now(UTC).isoformat(),
             "status": "queued",
         }
         r = await self._get_redis()
@@ -84,7 +84,7 @@ class RedisQueueService(QueueService):
         await r.lpush("prompt_queue", confirmation_id)
         return confirmation_id
 
-    async def get_status(self, confirmation_id: str) -> Optional[dict[str, Any]]:
+    async def get_status(self, confirmation_id: str) -> dict[str, Any] | None:
         """Get the status of a submission by confirmation ID."""
         r = await self._get_redis()
         data = await r.get(f"prompt:{confirmation_id}")
