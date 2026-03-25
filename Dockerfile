@@ -1,57 +1,43 @@
-# Multi-stage build for production
-FROM python:3.12-slim AS builder
+# Stage 1: Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Copy package files
+COPY backend/package*.json ./
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Install dependencies
+RUN npm ci --only=production
 
-# Copy dependency files
-COPY pyproject.toml .
-
-# Create virtual environment and install dependencies
-RUN uv venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
-RUN uv pip install -e ".[dev]"
-
-# Production stage
-FROM python:3.12-slim AS production
-
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 2: Production stage
+FROM node:20-alpine AS production
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Copy virtual environment from builder
-COPY --from=builder /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
+WORKDIR /app
 
-# Copy application code
-COPY backend/app ./app
+# Copy node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
 
-# Set ownership
-RUN chown -R appuser:appuser /app
+# Copy application files
+COPY --chown=nodejs:nodejs backend/index.js ./
+COPY --chown=nodejs:nodejs public/ ./public/
 
-# Switch to non-root user
-USER appuser
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # Expose port
-EXPOSE 8000
+EXPOSE 3000
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Switch to non-root user
+USER nodejs
+
+# Start server
+CMD ["node", "index.js"]
